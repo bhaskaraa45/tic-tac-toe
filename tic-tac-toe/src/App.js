@@ -20,7 +20,7 @@ function Board({ room, isXNext }) {
   useEffect(() => {
     if (!room) return;
 
-    const ws = new WebSocket(`ws://localhost:8080/ws?room=${room}&join=${!isXNext ? "1" : "0"}`);
+    const ws = new WebSocket(`wss://omkar.bhaskaraa45.me/ws?room=${room}&join=${!isXNext ? "1" : "0"}`);
 
     ws.onopen = () => {
       console.log('WebSocket Connected');
