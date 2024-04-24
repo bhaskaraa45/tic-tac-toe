@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -13,18 +14,18 @@ func removeTrailingSlashMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.URL.Path != "/" && strings.HasSuffix(c.Request.URL.Path, "/") {
 			c.Request.URL.Path = strings.TrimSuffix(c.Request.URL.Path, "/")
+			c.Redirect(http.StatusMovedPermanently, c.Request.URL.Path)
 		}
-		c.Next()
 	}
 }
 
-func (s *Server) RegisterRoutes() http.Handler {
-	r := gin.Default()
-	r.Use(removeTrailingSlashMiddleware())
+func (s *Server) RegisterRoutes() {
+	fmt.Println("Configuring routes")
+	s.Use(removeTrailingSlashMiddleware())
 
-	r.Use(func(c *gin.Context) {
+	// CORS middleware
+	s.Use(func(c *gin.Context) {
 		log.Println("CORS middleware triggered")
-
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
@@ -38,15 +39,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 		c.Next()
 	})
 
-	r.GET("/", s.HelloWorldHandler)
-	r.GET("/ws", socket.HandleConnections)
-
-	return r
+	s.GET("/", s.HelloWorldHandler)
+	s.GET("/ws", socket.HandleConnections)
 }
 
 func (s *Server) HelloWorldHandler(c *gin.Context) {
-	resp := make(map[string]string)
-	resp["message"] = "Hello World"
-
+	resp := map[string]string{"message": "Hello World"}
 	c.JSON(http.StatusOK, resp)
 }
